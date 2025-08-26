@@ -1,0 +1,225 @@
+/* Basic styles */
+body {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+    font-weight: 300;
+}
+
+/* Navbar styles */
+nav {
+    background-color: #00544a;
+    position: fixed; /* Fixed so it stays visible */
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: flex-start;
+    margin-right: 10px;
+    align-items: center;
+    height: 50px;
+    z-index: 1000; /* Ensures it stays above other elements */
+}
+
+.top {
+    justify-content: flex-start !important;
+    color: white;
+    text-decoration: none;
+    margin-right: 700px !important;
+}
+
+
+nav a {
+    color: white;
+    margin: 0 15px;
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+nav .admin-login {
+    display: flex;
+    align-items: center;
+}
+
+nav .admin-login i {
+    margin-left: 5px;
+}
+
+/* Main content styles */
+.container {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+    margin-bottom: 5px;
+}
+
+/* Slider styles */
+.slider {
+    width: 48%;
+    height: 350 !important; /* Adjust height as needed */
+    overflow: hidden;
+    border-radius: 8px;
+    position: relative;
+    margin-bottom: 20px;
+}
+
+
+.slider img {
+    width: 100%;
+    height: 130%;
+    object-fit: cover; /* Ensure the image covers the container without distortion */
+    display: block;
+}
+
+/* Kumbh Mela info styles */
+.info {
+    width: 48%;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    align-items: center;
+}
+
+.info p {
+    color: black;
+}
+
+/* Hero Section */
+.hero-header {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+}
+
+.hero-image {
+    width: 100%;
+    height: 100vh;
+    object-fit: cover;
+}
+
+.hero-content {
+    position: absolute;
+    top: 50%;
+    left: 5%;
+    transform: translateY(-50%);
+    color: white;
+    background: rgba(0, 85, 64, 0.662); /* Dark green with 66.2% opacity */
+    padding: 20px;
+    border-radius: 8px;
+    width: 400px;
+    height: 200px;
+}
+
+
+/* card  */
+.card-container {
+    display: flex;
+    justify-content: space-between; /* Ensures equal space between cards */
+    width: 90%;
+    margin-top: 50px;
+    padding-left: 50px;
+    padding-right: 50px;
+    gap: 50px;
+}
+
+.card {
+    background-color: white;
+    width: 30%;
+    padding: 40px; /* Reduced padding to balance the content */
+    text-align: center;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.card h3 {
+    font-size: 1.5em;
+    margin-bottom: 10px;
+}
+
+.card p {
+    font-size: 1em;
+}
+
+.card:hover {
+    background-color: #025b50;
+    color: white;
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Image styling inside cards */
+.card img {
+    width: 100%;
+    height: 200px;
+    border-radius: 8px;
+    margin-bottom: 15px; /* Adds space between image and text */
+}
+
+.about-us {
+    text-align: center;
+    padding: 5px;
+    background-color: #f4f4f4;
+    margin-bottom: 5px;
+}
+
+
+
+
+  /* Footer */
+ /* Footer styling */
+.footer {
+    display: flex;
+    justify-content: center; /* Aligns all footer items horizontally at the center */
+    gap: 100px; /* Adds space between the items */
+    background-color: #00544a;
+    padding: 20px 0;
+    width: 100%;
+    margin-top: 40px; /* Adds space above the footer to separate it from content */
+    flex-wrap: wrap; /* Allows items to wrap on smaller screens */
+  }
+  
+  .footer-item a {
+    text-decoration: none;
+    font-family: 'Roboto', sans-serif;
+    font-size: 1.2em;
+    color: white;
+    transition: color 0.3s ease;
+  }
+  
+  .footer-item a:hover {
+    color: #f4f4f4;
+  }
+  
+  /* Social media links styling */
+  .footer-item.social a {
+    margin-right: 15px;
+    margin-top: 50px;
+  }
+  
+  .footer-item.social a:hover {
+    color: #f4f4f4;
+    text-decoration: underline;
+  }
+  
+  /* Copyright text */
+  .copyright {
+    text-align: center;
+    font-family: 'Roboto', sans-serif;
+    font-size: 1em;
+    color: #333;
+    margin-top: 20px;
+  }
+  
+  

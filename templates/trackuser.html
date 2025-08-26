@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta
+      name="description"
+      content="Vali is a responsive and free admin theme built with Bootstrap 5, SASS, and PUG.js. It's fully customizable and modular."
+    />
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Track User</title>
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" type="text/css" href="../static/Dashboard.css" />
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net
+
+    <!-- Bootstrap Icons -->
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    />
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <!-- DataTables CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.datatables.net/v/bs5/dt-1.13.4/datatables.min.css"
+    />
+
+    <style>
+      .highlight {
+        background-color: yellow;
+        font-weight: bold;
+      }
+
+      table.dataTable td {
+        position: relative;
+      }
+    </style>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+      import {
+        getFirestore,
+        collection,
+        getDocs,
+        query,
+        orderBy,
+      } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+      import {
+        getStorage,
+        ref,
+        getDownloadURL,
+      } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-storage.js";
+
+      // Firebase Configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyAswX1kuf9rdA3UaSM_PNl5FVAnsbUdWd4",
+        authDomain: "rfidchildtracking.firebaseapp.com",
+        projectId: "rfidchildtracking",
+        storageBucket: "rfidchildtracking.appspot.com",
+        messagingSenderId: "331408176416",
+        appId: "1:331408176416:web:284d52d8f1762bbc249345",
+        measurementId: "G-YBW0CJNXWZ",
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      const storage = getStorage(app);
+
+      // Global variable to store DataTable instance
+      let dataTable = null;
+
+      async function fetchRFIDData() {
+        try {
+          const tableBody = document.querySelector("#sampleTable tbody");
+          tableBody.innerHTML =
+            "<tr><td colspan='10'>Loading data...</td></tr>";
+
+          console.log("Fetching data from Firestore...");
+          const q = query(
+            collection(db, "rfid_images"),
+            orderBy("timestamp", "desc")
+          );
+          const querySnapshot = await getDocs(q);
+
+          if (querySnapshot.empty) {
+            console.log("No documents found in 'rfid_images' collection");
+            return false;
+          }
+
+          tableBody.innerHTML = ""; // Clear loading message
+          querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            const name = data.Name || "Unknown";
+            const rfid = data.rfid_id || "N/A";
+            const timestamp =
+              data.timestamp && data.timestamp.toDate
+                ? data.timestamp.toDate()
+                : new Date();
+            const date = timestamp.toLocaleDateString();
+            const time = timestamp.toLocaleTimeString();
+            const image_name = data.image_name || "N/A";
+            const latitude = data.latitude || "N/A";
+            const longitude = data.longitude || "N/A";
+            const signed_url = data.signed_url || "placeholder.png";
+
+            let row = `<tr>
+                          <td>${name}</td>
+                          <td>${rfid}</td>
+                          <td>${date}</td>
+                          <td>${time}</td>
+                          <td class="tick">✔</td>
+                          <td>
+                              <img class="user-image" 
+                                   src="${signed_url}" 
+                                   alt="User Image" 
+                                   style="width:50px; height:auto;"
+                                   onerror="this.src='placeholder.png'">
+                          </td>
+                          <td>${image_name}</td>
+                          <td>${latitude}</td>
+                          <td>${longitude}</td>
+                          <td>${latitude},${longitude}</td>
+                      </tr>`;
+            tableBody.innerHTML += row;
+          });
+
+          // Fetch images from Firebase Storage if needed
+          document.querySelectorAll(".user-image").forEach((img) => {
+            const imageName = img.dataset.image;
+            if (
+              imageName &&
+              imageName !== "N/A" &&
+              !img.src.startsWith("http")
+            ) {
+              const storageRef = ref(storage, `images/${imageName}`);
+              getDownloadURL(storageRef)
+                .then((url) => {
+                  img.src = url;
+                })
+                .catch((error) => {
+                  console.error("Error fetching image:", error);
+                  img.src = "placeholder.png";
+                });
+            }
+          });
+
+          return true;
+        } catch (error) {
+          console.error("Error fetching data:", error);
+          document.querySelector("#sampleTable tbody").innerHTML =
+            "<tr><td colspan='10'>Error loading data: " +
+            error.message +
+            "</td></tr>";
+          return false;
+        }
+      }
+
+      function initializeDataTable() {
+        // Destroy existing DataTable instance if it exists
+        if (dataTable) {
+          dataTable.destroy();
+        }
+
+        // Initialize new DataTable
+        dataTable = $("#sampleTable").DataTable({
+          pageLength: 10,
+          lengthMenu: [10, 25, 50, 100],
+          language: {
+            search: "Filter records:",
+          },
+          dom: '<"top"<"d-flex justify-content-between"lf>>rt<"bottom"ip><"clear">',
+          initComplete: function () {
+            $(".dataTables_filter").hide();
+          },
+        });
+
+        // Function to remove existing highlights
+        function removeHighlights() {
+          $(".highlight").each(function () {
+            $(this).contents().unwrap();
+          });
+        }
+
+        // Function to apply highlights
+        function applyHighlights(searchTerm) {
+          if (!searchTerm.trim()) {
+            removeHighlights();
+            return;
+          }
+
+          removeHighlights();
+
+          dataTable.cells().every(function () {
+            let cell = $(this.node());
+            let text = cell.text();
+
+            if (text.toLowerCase().includes(searchTerm.toLowerCase())) {
+              let newText = text.replace(
+                new RegExp(searchTerm, "gi"),
+                (match) => `<span class="highlight">${match}</span>`
+              );
+              cell.html(newText);
+            }
+          });
+        }
+
+        // Bind search to custom search input
+        $("#searchInput").on("keyup", function () {
+          let searchTerm = this.value;
+          dataTable.search(searchTerm).draw();
+          applyHighlights(searchTerm);
+        });
+
+        // Bind search to global search input
+        $("#globalSearch").on("keyup", function () {
+          let searchTerm = this.value;
+          dataTable.search(searchTerm).draw();
+          applyHighlights(searchTerm);
+        });
+
+        return dataTable;
+      }
+
+      // Main initialization
+      document.addEventListener("DOMContentLoaded", async () => {
+        // First load the data
+        const success = await fetchRFIDData();
+
+        // Then initialize DataTable if data loaded successfully or use fallback
+        if (success || document.querySelector("#sampleTable tbody tr")) {
+          initializeDataTable();
+        }
+      });
+
+      // Set up refresh button
+      document
+        .getElementById("refreshButton")
+        .addEventListener("click", async () => {
+          const success = await fetchRFIDData();
+          if (success || document.querySelector("#sampleTable tbody tr")) {
+            initializeDataTable();
+          }
+        });
+    </script>
+  </head>
+  <body class="app sidebar-mini">
+    <!-- Navbar -->
+    <header class="app-header">
+      <a class="app-header__logo" href="index.html">Admin Dashboard</a>
+      <a
+        class="app-sidebar__toggle"
+        href="#"
+        data-toggle="sidebar"
+        aria-label="Hide Sidebar"
+      ></a>
+      <ul class="app-nav">
+        <li class="app-search">
+          <input
+            class="app-search__input"
+            type="search"
+            placeholder="Search"
+            id="globalSearch"
+          />
+          <button class="app-search__button">
+            <i class="bi bi-search"></i>
+          </button>
+        </li>
+      </ul>
+    </header>
+
+    <!-- Sidebar Menu -->
+    <div class="app-sidebar__overlay" data-toggle="sidebar"></div>
+    <aside class="app-sidebar">
+    <div class="app-sidebar__user"><img class="app-sidebar__user-avatar" src="https://randomuser.me/api/portraits/men/1.jpg" alt="User Image"></div>
+      <ul class="app-menu">
+        <li><a class="app-menu__item active" href="{{ url_for('dashboard') }}"><i class="app-menu__icon bi bi-speedometer"></i><span class="app-menu__label">Dashboard</span></a></li>
+        <!-- <li class="treeview"><a class="app-menu__item" href="UserForm.html" data-toggle="treeview"><span class="app-menu__label"><i class="fas fa-user-plus" style="font-size: 24px; color: white; margin-right: 10px;"></i> -->
+          <!-- Add User</span></a> -->
+          <li class="treeview"><a class="app-menu__item" href="{{ url_for('trackuser') }}" data-toggle="treeview" name="trackuser" id="trackuser"></i><span class="app-menu__label "><i class="fas fa-location-arrow" style="font-size: 24px; color: white; margin-right: 10px;"></i>Track User</span></a></li>      </ul>
+    </aside>
+    <!-- <aside class="app-sidebar">
+      <div class="app-sidebar__user">
+        <img
+          class="app-sidebar__user-avatar"
+          src="https://randomuser.me/api/portraits/men/1.jpg"
+          alt="User Image"
+        />
+      </div>
+      <ul class="app-menu">
+        <li>
+          <a class="app-menu__item" href="{{ url_for('dashboard') }}">
+            <i class="fas fa-user-plus"></i>Dashboard
+          </a>
+        </li>
+        <li>
+          <a class="app-menu__item" href="{{ url_for('trackuser') }}">
+            <i class="fas fa-location-arrow"></i> Track User
+          </a>
+        </li>
+      </ul>
+    </aside> -->
+
+    <!-- Main Content -->
+    <main class="app-content">
+      <div class="app-title">
+        <ul class="app-breadcrumb breadcrumb side">
+          <li class="breadcrumb-item"><b>Users Information</b></li>
+        </ul>
+      </div>
+
+      <div class="row">
+        <div class="col-md-12">
+          <div class="tile">
+            <div class="tile-body">
+              <div class="mb-3 d-flex justify-content-between">
+                <input
+                  type="text"
+                  id="searchInput"
+                  class="form-control w-75"
+                  placeholder="Search by name or RFID number"
+                />
+                <button id="refreshButton" class="btn btn-primary">
+                  Refresh Data
+                </button>
+              </div>
+              <div class="table-responsive">
+                <table
+                  class="table table-hover table-bordered"
+                  id="sampleTable"
+                >
+                  <thead>
+                    <tr>
+                      <th>Users</th>
+                      <th>RFID No</th>
+                      <th>Date</th>
+                      <th>Time</th>
+                      <th>Gate 1</th>
+                      <th>Image</th>
+                      <th>Image Name</th>
+                      <th>Latitude</th>
+                      <th>Longitude</th>
+                      <th>Location</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Fake user data -->
+                    <tr>
+                      <td>John Doe</td>
+                      <td>RFID123456</td>
+                      <td>03/25/2025</td>
+                      <td>10:30:45</td>
+                      <td class="tick">✔</td>
+                      <td>
+                        <img
+                          class="user-image"
+                          src="https://via.placeholder.com/50"
+                          alt="User Image"
+                          style="width: 50px; height: auto"
+                        />
+                      </td>
+                      <td>john_doe_001.jpg</td>
+                      <td>40.7128</td>
+                      <td>-74.0060</td>
+                      <td>40.7128,-74.0060</td>
+                    </tr>
+                    <!-- Data populated by JavaScript will append here -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- JS Dependencies -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/main.js"></script>
+    <script src="https://cdn.datatables.net/v/bs5/dt-1.13.4/datatables.min.js"></script>
+  </body>
+</html>
